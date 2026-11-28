@@ -1,4 +1,7 @@
-from pydantic import BaseModel
+from logging import config
+
+from pydantic import BaseModel, ConfigDict
+import uuid
 
 class UserSchema(BaseModel):
     username: str
@@ -8,3 +11,10 @@ class UserSchema(BaseModel):
 class Login(BaseModel):
     email: str
     password: str
+
+class userout(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    username: str
+    email: str

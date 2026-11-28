@@ -27,12 +27,13 @@ async def verify_token(cred: HTTPAuthorizationCredentials= Depends(bearer),
                  db: AsyncSession = Depends(get_db)) -> dict:
     token = cred.credentials
     try:
-        payload = jwt.decode(token, secret_key, algorithms="HS256")
-        user_id = payload["sub"]
-        user = await db.scalar(select(User).where(User.id == uuid.UUID(user_id)))
-        if user is None:
-            raise ValueError
-    except InvalidTokenError, ValueError, KeyError:
-        raise HTTPException(status_code=401, detail="invalid crediental")
-
-    return {"id": user.id, "name": user.username, "email": user.email}
+        payload = jwt.decode(token, secret_key, algorithms=["HS256"])
+        user_id = uuid.UUID(payload["sub"])
+    except (InvalidTokenError, ValueError, KeyError):
+        raise HTTPException(status_code=401, detail="Invalid credentials",
+                        headers={"WWW-Authenticate": "Bearer"})
+    user = await db.scalar(select(User).where(User.id == user_id))
+    if user is None:
+        raise HTTPException(status_code=401, detail="Invalid credentials",
+                            headers={"WWW-Authenticate": "Bearer"})
+    return user

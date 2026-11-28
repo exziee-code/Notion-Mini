@@ -7,6 +7,7 @@ from .schemas import UserSchema, Login, userout
 from .security import HashPassword, verify_password
 from contextlib import asynccontextmanager
 from .auth import get_token, verify_token
+from pages.router import router as page_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -16,6 +17,8 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 app = FastAPI(lifespan=lifespan)
+
+app.include_router(page_router)
 
 @app.post("/register/", response_model=userout)
 async def register(data: UserSchema, 
@@ -38,5 +41,5 @@ async def login(data: Login, db: AsyncSession = Depends(get_db)):
         return {"Token": get_token(user.id), "Token Type": "bearer"}
 
 @app.get("/user/me", response_model=userout)
-async def me(user: dict= Depends(verify_token)) -> dict:
+async def me(user: dict= Depends(verify_token)) -> User:
     return user
